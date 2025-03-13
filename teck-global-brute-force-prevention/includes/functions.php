@@ -129,7 +129,7 @@ function tgbfp_geolocation_page() {
     }
     require_once $autoload_file;
 
-    $geo_db_path = get_option('tgbfp_geo_db_path', '/usr/share/GeoIP/GeoLite2-City.mmdb');
+    $geo_db_path = get_option('tgbfp_geo_db_path', '/your/path/GeoIP/GeoLite2-City.mmdb');
     if (!file_exists($geo_db_path)) {
         echo '<div class="notice notice-error"><p>GeoLite2 database not found at <code>' . esc_html($geo_db_path) . '</code>. Please download it from <a href="https://dev.maxmind.com/geoip/geoip2/geolite2/" target="_blank">MaxMind</a> and place it in the specified location, or update the path in the plugin settings.</p></div>';
         return;

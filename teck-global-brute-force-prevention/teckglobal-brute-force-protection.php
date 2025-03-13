@@ -61,7 +61,7 @@ function tgbfp_enqueue_assets($hook) {
 
     // Only enqueue Google Maps for the geolocation page
     if ($hook === 'teckglobal-security_page_tgbfp-geolocation') {
-        $google_maps_key = 'AIzaSyDpp4Cm9gaFDBnRgPMk-ZFBoBjrHArztaM'; // Replace with your API key
+        $google_maps_key = 'YOUR_GOOGLE_API_KEY'; // Replace with your API key
         if (!empty($google_maps_key)) {
             wp_enqueue_script('google-maps', "https://maps.googleapis.com/maps/api/js?key={$google_maps_key}", [], null, true);
         }
