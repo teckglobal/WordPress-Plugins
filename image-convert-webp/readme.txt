@@ -1,12 +1,15 @@
-=== Teck Global Convert Images ===
-Contributors: teckglobal
-Tags: security, image, convert, Imagick, wordpress, webp, jpg, png
+=== Teck Global Image Convert WebP ===
+Contributors: TeckGlobal LLC
+Author URI: https://teck-global.com
+Plugin URI: https://teck-global.com/wordpress-plugins
+Tags: login, customization, branding
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 1.0.2
 Requires PHP: 7.4
-License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.txt
+License: GPL-2.0-or-later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+Tags: images, wordpress, png/jpg/jpeg, WebP, imagick
 
 A WordPress plugin by Teck Global to convert any newly upload image .jpg/jpeg/png to webp
 
@@ -20,7 +23,7 @@ A WordPress plugin by Teck Global to convert any newly upload image .jpg/jpeg/pn
 Teck Global is a leading provider of IT solutions, specializing in cybersecurity and WordPress development. Visit us at [https://teck-global.com](https://teck-global.com) or check out our plugins at [https://teck-global.com/wordpress-plugins](https://teck-global.com/wordpress-plugins).
 
 == Installation ==
-1. Upload the `convert-imags` folder to the `/wp-content/plugins/` directory.
+1. Upload the `image-convert-webp` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Upload a .jpg or whatever file and what it convert to webp
 

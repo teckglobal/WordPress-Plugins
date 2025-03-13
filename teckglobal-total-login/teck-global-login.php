@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Login Customize
+ * Plugin Name: Total Login
  * Plugin URI: https://teck-global.com/wordpress-plugins
  * Description: Customizes the WordPress login page with TeckGlobal branding and provides admin options for customization.
  * Version: 1.0.0

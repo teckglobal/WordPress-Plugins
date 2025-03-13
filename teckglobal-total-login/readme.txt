@@ -1,5 +1,7 @@
-=== Teck Global Custom Login ===
-Contributors: teckglobal
+=== Teck Global Total Login ===
+Contributors: TeckGlobal LLC
+Author URI: https://teck-global.com
+Plugin URI: https://teck-global.com/wordpress-plugins
 Tags: login, customization, branding
 Requires at least: 5.0
 Tested up to: 6.4
