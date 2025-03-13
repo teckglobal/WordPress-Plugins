@@ -1,0 +1,58 @@
+/* Teck Global Permissions Checker Styles */
+.wrap {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+    color: #0073aa;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+#tgpchecker_permissions_table {
+    width: 100%;
+}
+
+#tgpchecker_permissions_table th {
+    background: #f9f9f9;
+    padding: 10px;
+}
+
+#tgpchecker_permissions_table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    word-break: break-all;
+}
+
+/* Status colors */
+.status-ok {
+    background-color: #e6ffe6; /* Light green */
+}
+
+.status-warning {
+    background-color: #fff3e6; /* Light yellow */
+}
+
+.status-critical {
+    background-color: #ffe6e6; /* Light red */
+}
+
+/* Disabled button style */
+.button-disabled {
+    background: #ddd;
+    color: #666;
+    border: 1px solid #ccc;
+    padding: 2px 8px;
+    border-radius: 3px;
+    cursor: not-allowed;
+}
+
+/* Notice styles */
+.notice {
+    margin: 10px 0;
+}
