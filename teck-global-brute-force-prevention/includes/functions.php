@@ -32,19 +32,24 @@ function teckglobal_bfp_log_attempt(string $ip): void {
         $country = 'Unknown';
         $latitude = null;
         $longitude = null;
-        if (file_exists($geo_path)) {
+        
+        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+            teckglobal_bfp_debug("Invalid IP address provided: $ip");
+        } elseif (file_exists($geo_path)) {
+            teckglobal_bfp_debug("GeoIP database found at: $geo_path");
             try {
                 $reader = new Reader($geo_path);
+                teckglobal_bfp_debug("GeoIP Reader initialized for IP: $ip");
                 $record = $reader->city($ip);
                 $country = $record->country->name ?? 'Unknown';
                 $latitude = $record->location->latitude ?? null;
                 $longitude = $record->location->longitude ?? null;
-                teckglobal_bfp_debug("GeoIP data for IP $ip: Country=$country, Lat=$latitude, Lon=$longitude");
+                teckglobal_bfp_debug("GeoIP data retrieved for IP $ip: Country=$country, Lat=$latitude, Lon=$longitude");
             } catch (Exception $e) {
-                teckglobal_bfp_debug("GeoIP error for IP $ip: " . $e->getMessage());
+                teckglobal_bfp_debug("GeoIP lookup failed for IP $ip: " . $e->getMessage());
             }
         } else {
-            teckglobal_bfp_debug("GeoIP database not found at $geo_path");
+            teckglobal_bfp_debug("GeoIP database NOT found at: $geo_path");
         }
 
         $result = $wpdb->insert($table_name, [
@@ -57,7 +62,7 @@ function teckglobal_bfp_log_attempt(string $ip): void {
         ]);
 
         if ($result === false) {
-            teckglobal_bfp_debug("Failed to insert IP $ip: " . $wpdb->last_error);
+            teckglobal_bfp_debug("Failed to insert IP $ip into database: " . $wpdb->last_error);
         } else {
             teckglobal_bfp_debug("Inserted new IP $ip into logs with country: $country");
         }
@@ -89,7 +94,7 @@ function teckglobal_bfp_ban_ip(string $ip): void {
     $expiry = date('Y-m-d H:i:s', strtotime("+$ban_time minutes"));
 
     if (!$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE ip = %s", $ip))) {
-        teckglobal_bfp_log_attempt($ip); // Ensure IP is logged with GeoIP data before banning
+        teckglobal_bfp_log_attempt($ip);
     }
 
     $result = $wpdb->update(
@@ -194,7 +199,7 @@ function teckglobal_bfp_settings_page(): void {
                 </tr>
                 <tr>
                     <th><label for="logo_image">Upload Logo</label></th>
-                    <td><input type="file" name="logo_image" id="logo_image" accept="image/*"></td>
+                    <td><input type="file" name="logo_image" id="logo_image"></td>
                 </tr>
             </table>
             <p class="submit">
@@ -249,7 +254,7 @@ class TeckGlobal_BFP_IP_Table extends WP_List_Table {
             'banned'    => 'Banned',
             'ban_expiry' => 'Ban Expiry',
             'country'   => 'Country',
-            'actions'   => 'Actions', // Added Actions column
+            'actions'   => 'Actions',
         ];
     }
 
@@ -285,7 +290,6 @@ class TeckGlobal_BFP_IP_Table extends WP_List_Table {
             'total_pages' => ceil($total_items / $per_page),
         ]);
 
-        // Handle unban action from IP Logs
         if (isset($_GET['action']) && $_GET['action'] === 'unban' && isset($_GET['ip']) && check_admin_referer('teckglobal_bfp_unban_ip_' . $_GET['ip'])) {
             $ip = sanitize_text_field($_GET['ip']);
             teckglobal_bfp_unban_ip($ip);
@@ -352,16 +356,64 @@ function teckglobal_bfp_ip_logs_page(): void {
 function teckglobal_bfp_geo_map_page(): void {
     global $wpdb;
     $table_name = $wpdb->prefix . 'teckglobal_bfp_logs';
-    $ips = $wpdb->get_results("SELECT ip, country, latitude, longitude, COUNT(*) as count FROM $table_name WHERE latitude IS NOT NULL AND longitude IS NOT NULL GROUP BY country", ARRAY_A);
+    
+    $ips = $wpdb->get_results(
+        "SELECT ip, country, latitude, longitude, COUNT(*) as count 
+         FROM $table_name 
+         WHERE latitude IS NOT NULL AND longitude IS NOT NULL 
+         GROUP BY ip, country, latitude, longitude",
+        ARRAY_A
+    );
     $locations = json_encode($ips);
     ?>
     <div class="wrap">
         <h1>Geolocation Map</h1>
         <div id="map" style="height: 600px; width: 100%;"></div>
         <script>
-            var locations = <?php echo $locations; ?>;
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('Map page loaded. Locations:', <?php echo $locations; ?>);
+                if (typeof L === 'undefined') {
+                    console.error('Leaflet.js not loaded!');
+                    return;
+                }
+
+                var locations = <?php echo $locations; ?>;
+                var map = L.map('map').setView([0, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                locations.forEach(function(location) {
+                    if (location.latitude && location.longitude) {
+                        var marker = L.marker([location.latitude, location.longitude]).addTo(map);
+                        marker.bindPopup(
+                            '<b>IP:</b> ' + location.ip + '<br>' +
+                            '<b>Country:</b> ' + location.country + '<br>' +
+                            '<b>Attempts:</b> ' + location.count
+                        );
+                        console.log('Marker added:', location.ip, location.latitude, location.longitude);
+                    } else {
+                        console.warn('Invalid coordinates for IP:', location.ip);
+                    }
+                });
+
+                if (locations.length > 0) {
+                    var bounds = locations.map(function(loc) {
+                        return [loc.latitude, loc.longitude];
+                    }).filter(function(coord) {
+                        return coord[0] && coord[1];
+                    });
+                    if (bounds.length > 0) {
+                        map.fitBounds(bounds);
+                        console.log('Map bounds set to:', bounds);
+                    } else {
+                        console.warn('No valid bounds to fit.');
+                    }
+                } else {
+                    console.warn('No locations to display.');
+                }
+            });
         </script>
     </div>
     <?php
 }
-?>
