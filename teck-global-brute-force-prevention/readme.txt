@@ -1,73 +1,73 @@
-=== Teck Global Brute Force Protection ===
-Contributors: teckglobal
-Tags: security, brute force, ip management, geolocation, wordpress security
+=== TeckGlobal Brute Force Protect ===
+Contributors: TeckGlobal LLC
+Tags: security, brute force, login protection, geolocation, ip management
 Requires at least: 5.0
-Tested up to: 6.4
-Stable tag: 1.0.2
+Tested up to: 6.5
+Stable tag: 1.0.4
 Requires PHP: 7.4
 License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.txt
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A WordPress plugin by Teck Global to prevent brute force login attacks with IP management and geolocation features.
+A WordPress plugin by TeckGlobal LLC to prevent brute force login attacks with IP management and geolocation features.
 
 == Description ==
-Teck Global Brute Force Protection is a robust security plugin designed to safeguard your WordPress site from brute force login attacks. It includes advanced features such as IP banning, login attempt logging, a sortable and searchable IP log table, and geolocation visualization using MaxMind's GeoLite2 database and Google Maps.
+TeckGlobal Brute Force Protect is a robust security plugin designed by TeckGlobal LLC to safeguard your WordPress site from brute force login attacks. It includes features like IP banning, a sortable and searchable IP logs table, and geolocation visualization using MaxMind's GeoLite2 database and Google Maps.
 
-### Features
-- **Brute Force Protection:** Limits login attempts and bans IPs after exceeding the threshold.
-- **IP Management:** Add or remove banned IPs via an intuitive interface.
-- **IP Logs:** View login attempts in a sortable, searchable table with timestamps.
-- **Geolocation:** Visualize IP locations on Google Maps with color-coded dots based on attempt frequency:
-  - Red: 26+ attempts from the same country
-  - Orange: 11-25 attempts from the same country
-  - Green: 1-10 attempts from the same country
-- **MaxMind Integration:** Uses the GeoLite2-City.mmdb file (configurable path, default: `/your/path/GeoIP/GeoLite2-City.mmdb`) for geolocation data.
+### Features:
+- **Brute Force Protection**: Configurable login attempt limit before IP ban (default: 5).
+- **IP Management**: Add or remove banned IPs via an admin interface or IP Logs table.
+- **IP Logs**: View a table of IP logs with timestamps, attempts, ban status, expiry, and country, sortable and searchable, with an option to remove bans.
+- **Geolocation**: Displays IP locations on a Google Map with color-coded dots (red: 26+, orange: 11-25, green: 1-10 attempts per country).
+- **MaxMind Integration**: Uses a configurable GeoLite2-City.mmdb file path (default: `/usr/share/GeoIP/GeoLite2-City.mmdb`) for geolocation lookups.
+- **Summary Dashboard**: Displays total brute force attempts, TeckGlobal LLC website link, and an option to upload a logo.
+- **Configurable Ban Settings**: Adjust max attempts, ban duration, and auto-ban invalid usernames.
 
-### Company Information
-Teck Global is a leading provider of IT solutions, specializing in cybersecurity and WordPress development. Visit us at [https://teck-global.com](https://teck-global.com) or check out our plugins at [https://teck-global.com/wordpress-plugins](https://teck-global.com/wordpress-plugins).
+### Company Information:
+TeckGlobal LLC is a technology solutions provider based at [https://teck-global.com](https://teck-global.com). Visit our plugin page at [https://teck-global.com/wordpress-plugins](https://teck-global.com/wordpress-plugins) for more details and support.
 
 == Installation ==
-1. Upload the `teck-global-brute-force-protection` folder to the `/wp-content/plugins/` directory.
-2. Install the MaxMind GeoIP2 library by running `composer require geoip2/geoip2:~2.0` in the plugin directory. "You might need to install compose"
-3. Activate the plugin through the 'Plugins' menu in WordPress.
-4. Download the GeoLite2-City.mmdb file from [MaxMind](https://dev.maxmind.com/geoip/geoip2/geolite2/) and place it at `/usr/share/GeoIP/GeoLite2-City.mmdb` (or configure a different path in the settings).
-5. Replace `YOUR_GOOGLE_MAPS_API_KEY` in `teck-global-brute-force-protection.php` with your Google Maps API key. "Get your API key at https://console.cloud.google.com/apis"
-6. Configure settings under the "TeckGlobal Security" menu in the WordPress admin sidebar.
+1. Upload the `teckglobal-brute-force-protect` folder to the `/wp-content/plugins/` directory.
+2. Activate the plugin through the 'Plugins' menu in WordPress.
+3. Ensure the MaxMind GeoLite2-City.mmdb file is available and configure its path in the plugin settings.
+4. Replace `YOUR_GOOGLE_MAPS_API_KEY` in `teckglobal-brute-force-protect.php` with your Google Maps API key.
+5. Enable `WP_DEBUG` in `wp-config.php` to log debug info to `wp-content/teckglobal-bfp-debug.log`.
+6. Navigate to the "Brute Force Protect" menu in the WordPress admin sidebar to configure settings.
 
 == Frequently Asked Questions ==
-= Where do I get the GeoLite2 database? =
-Download it from [MaxMind](https://dev.maxmind.com/geoip/geoip2/geolite2/) and place it at `/usr/share/GeoIP/GeoLite2-City.mmdb` or your preferred location (configurable in settings).
+= Does this plugin work with MariaDB? =
+Yes, the plugin is fully compatible with MariaDB via WordPress's database abstraction layer.
 
-= What is the default lockout duration? =
-The default lockout duration is 1 hour (3600 seconds), configurable in the settings.
+= How do I get a Google Maps API key? =
+Visit [Google Cloud Console](https://console.cloud.google.com) to create a project, enable the Maps JavaScript API, and generate an API key.
 
-= Why do I see a "GeoLite2 database not found" error? =
-This means the GeoLite2-City.mmdb file is missing or not at the specified path. Download it from MaxMind and update the path in the plugin settings if needed.
-
-== Screenshots ==
-1. Settings page for configuring max attempts, lockout duration, and GeoLite2 database path.
-2. IP Management interface for adding/removing banned IPs.
-3. IP Logs table with sorting and search functionality.
-4. Geolocation Map showing IP locations with color-coded markers.
+= Why isn’t the country showing for IPs? =
+Check the debug log (`wp-content/teckglobal-bfp-debug.log`) for GeoIP errors. Ensure the GeoLite2-City.mmdb file is at the specified path and the MaxMind library is installed.
 
 == Changelog ==
+= 1.0.4 =
+* Added "Remove Ban" option in the IP Logs table.
+* Fixed country not showing for banned IPs by improving GeoIP integration and debugging.
+
+= 1.0.3 =
+* Fixed IP logging and banning issues.
+* Added Nginx compatibility with `HTTP_X_FORWARDED_FOR`.
+* Enhanced PHP 8.3 compatibility with strict typing.
+
 = 1.0.2 =
-* Added configurable GeoLite2 database path in settings.
-* Fixed error message to display the full path correctly.
-* Improved documentation for GeoLite2 database setup.
+* Added options to adjust max login attempts, ban duration, and auto-ban invalid usernames.
 
 = 1.0.1 =
-* Fixed critical error on Geolocation page by adding dependency checks and error handling.
-* Improved Google Maps initialization and enqueue logic.
+* Added summary with total brute force attempts, GeoLite2 path configuration, and logo upload.
 
 = 1.0.0 =
 * Initial release with brute force protection, IP management, logs, and geolocation features.
 
 == Upgrade Notice ==
-= 1.0.2 =
-This update adds a configurable GeoLite2 database path to avoid "not found" errors. Update your settings if the default path doesn’t match your server.
+= 1.0.4 =
+Added "Remove Ban" in IP Logs and fixed country display with enhanced GeoIP handling.
 
 == Compatibility ==
 - WordPress: 5.0+
-- PHP: 7.4+
-- Database: Compatible with MariaDB and MySQL
+- PHP: 7.4+ (Tested up to 8.3)
+- Database: MySQL/MariaDB
+- Server: Nginx
