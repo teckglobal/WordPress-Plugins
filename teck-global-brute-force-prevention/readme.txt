@@ -23,7 +23,7 @@ TeckGlobal Brute Force Protect is a robust security plugin designed by TeckGloba
 - **Configurable Ban Settings**: Adjust max attempts, ban duration, and auto-ban invalid usernames.
 
 ### Company Information:
-TeckGlobal LLC is a technology solutions provider based at [https://teck-global.com](https://teck-global.com). Visit our plugin page at [https://teck-global.com/wordpress-plugins](https://teck-global.com/wordpress-plugins) for more details and support.
+TeckGlobal LLC is a technology solutions provider based at (https://teck-global.com). Visit our plugin page at (https://teck-global.com/wordpress-plugins) for more details and support.
 
 == Installation ==
 1. Upload the `teckglobal-brute-force-protect` folder to the `/wp-content/plugins/` directory.
