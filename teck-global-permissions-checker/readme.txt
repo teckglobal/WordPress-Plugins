@@ -2,13 +2,13 @@
 Contributors: TeckGlobal LLC
 Author URI: https://teck-global.com
 Plugin URI: https://teck-global.com/wordpress-plugins
-Tags: login, customization, branding
 Requires at least: 5.0
-Tested up to: 6.4
-Requires PHP: 7.4
-License: GPL-2.0-or-later
+Tested up to: 6.7
+Stable tag: 1.0.4
+Requires PHP: 7.4 or later
+License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
-Tags: security, permissions, file permissions, wordpress security
+Tags: wordpress, security, permissions, file permissions, wordpress security, wordpress plugin
 
 A WordPress plugin by Teck Global to check and fix file and folder permissions in the WordPress root directory.
 
@@ -27,7 +27,7 @@ Teck Global Permissions Checker scans all files and folders in the WordPress roo
 - Built-in sorting for the permissions report table.
 
 ### Company Information
-Teck Global is a leading provider of IT solutions, specializing in cybersecurity and WordPress development. Visit us at [https://teck-global.com](https://teck-global.com) or check out our plugins at [https://teck-global.com/wordpress-plugins](https://teck-global.com/wordpress-plugins).
+Teck Global is a leading provider of IT solutions, specializing in cybersecurity and WordPress development. Visit us at (https://teck-global.com) or check out our plugins at (https://teck-global.com/wordpress-plugins).
 
 == Installation ==
 1. Upload the `teck-global-permissions-checker` folder to the `/wp-content/plugins/` directory.
@@ -61,5 +61,6 @@ This update adds the ability to fix permissions individually or all at once. Ens
 
 == Compatibility ==
 - WordPress: 5.0+
-- PHP: 7.4+
-- Database: Compatible with MariaDB and MySQL (no database interaction required)
+- PHP: 7.4+ (Tested up to 8.3)
+- Database: MySQL/MariaDB (no database interaction required)
+- Server: Nginx

@@ -1,12 +1,14 @@
 === TeckGlobal Brute Force Protect ===
 Contributors: TeckGlobal LLC
-Tags: security, brute force, login protection, geolocation, ip management
+Author URI: https://teck-global.com
+Plugin URI: https://teck-global.com/wordpress-plugins
 Requires at least: 5.0
-Tested up to: 6.5
+Tested up to: 6.7
 Stable tag: 1.0.4
-Requires PHP: 7.4
+Requires PHP: 7.4 or later
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Tags: wordpress, security, brute force, login protection, geolocation, ip management, wordpress plugin
 
 A WordPress plugin by TeckGlobal LLC to prevent brute force login attacks with IP management and geolocation features.
 
@@ -69,5 +71,5 @@ Added "Remove Ban" in IP Logs and fixed country display with enhanced GeoIP hand
 == Compatibility ==
 - WordPress: 5.0+
 - PHP: 7.4+ (Tested up to 8.3)
-- Database: MySQL/MariaDB
+- Database: MySQL/MariaDB (no database interaction required)
 - Server: Nginx
