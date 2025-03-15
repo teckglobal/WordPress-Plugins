@@ -8,7 +8,37 @@ require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 require_once TECKGLOBAL_BFP_PATH . 'vendor/autoload.php';
 use GeoIp2\Database\Reader;
 
+// Check if an IP is excluded (exact match or CIDR)
+function teckglobal_bfp_is_ip_excluded(string $ip): bool {
+    $excluded = get_option('teckglobal_bfp_excluded_ips', '');
+    if (empty($excluded)) return false;
+
+    $excluded_list = array_filter(array_map('trim', explode("\n", $excluded)));
+    foreach ($excluded_list as $entry) {
+        if (strpos($entry, '/') !== false) {
+            // CIDR notation (e.g., 192.168.1.0/24)
+            list($subnet, $mask) = explode('/', $entry);
+            $ip_long = ip2long($ip);
+            $subnet_long = ip2long($subnet);
+            if ($ip_long && $subnet_long && ($ip_long >> (32 - $mask)) == ($subnet_long >> (32 - $mask))) {
+                teckglobal_bfp_debug("IP $ip matches excluded CIDR $entry.");
+                return true;
+            }
+        } elseif ($entry === $ip) {
+            // Exact IP match
+            teckglobal_bfp_debug("IP $ip matches excluded IP $entry.");
+            return true;
+        }
+    }
+    return false;
+}
+
 function teckglobal_bfp_log_attempt(string $ip): void {
+    if (teckglobal_bfp_is_ip_excluded($ip)) {
+        teckglobal_bfp_debug("IP $ip is excluded from logging and banning.");
+        return;
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'teckglobal_bfp_logs';
     $geo_path = get_option('teckglobal_bfp_geo_path', '/var/www/html/teck-global.com/wp-content/plugins/teckglobal-brute-force-protect/vendor/maxmind-db/GeoLite2-City.mmdb');
@@ -43,6 +73,10 @@ function teckglobal_bfp_log_attempt(string $ip): void {
 }
 
 function teckglobal_bfp_is_ip_banned(string $ip): bool {
+    if (teckglobal_bfp_is_ip_excluded($ip)) {
+        return false;
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'teckglobal_bfp_logs';
     $row = $wpdb->get_row($wpdb->prepare("SELECT banned, ban_expiry FROM $table_name WHERE ip = %s", $ip));
@@ -59,15 +93,19 @@ function teckglobal_bfp_is_ip_banned(string $ip): bool {
 }
 
 function teckglobal_bfp_ban_ip(string $ip): void {
+    if (teckglobal_bfp_is_ip_excluded($ip)) {
+        teckglobal_bfp_debug("IP $ip is excluded, skipping ban.");
+        return;
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'teckglobal_bfp_logs';
     $ban_time = (int) get_option('teckglobal_bfp_ban_time', 60);
     $expiry = date('Y-m-d H:i:s', strtotime("+$ban_time minutes"));
 
-    // Ensure the IP is logged, even if it’s new
     $existing = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE ip = %s", $ip));
     if (!$existing) {
-        teckglobal_bfp_log_attempt($ip); // Log with attempts = 1
+        teckglobal_bfp_log_attempt($ip);
         $wpdb->update($table_name, ['banned' => 1, 'ban_expiry' => $expiry], ['ip' => $ip]);
     } else {
         $result = $wpdb->update($table_name, ['banned' => 1, 'ban_expiry' => $expiry], ['ip' => $ip]);
@@ -105,6 +143,7 @@ function teckglobal_bfp_settings_page(): void {
         update_option('teckglobal_bfp_max_attempts', absint($_POST['max_attempts']));
         update_option('teckglobal_bfp_ban_time', absint($_POST['ban_time']));
         update_option('teckglobal_bfp_auto_ban_invalid', isset($_POST['auto_ban_invalid']) ? 1 : 0);
+        update_option('teckglobal_bfp_excluded_ips', sanitize_textarea_field($_POST['excluded_ips']));
         if (!empty($_FILES['logo_image']['name'])) {
             $upload = wp_handle_upload($_FILES['logo_image'], ['test_form' => false]);
             if (isset($upload['url'])) update_option('teckglobal_bfp_logo', $upload['url']);
@@ -116,6 +155,7 @@ function teckglobal_bfp_settings_page(): void {
     $max_attempts = get_option('teckglobal_bfp_max_attempts', 5);
     $ban_time = get_option('teckglobal_bfp_ban_time', 60);
     $auto_ban_invalid = get_option('teckglobal_bfp_auto_ban_invalid', 0);
+    $excluded_ips = get_option('teckglobal_bfp_excluded_ips', '');
     $logo_url = get_option('teckglobal_bfp_logo', '');
     ?>
     <div class="wrap">
@@ -136,6 +176,7 @@ function teckglobal_bfp_settings_page(): void {
                 <tr><th><label for="max_attempts">Max Login Attempts Before Ban</label></th><td><input type="number" name="max_attempts" id="max_attempts" value="<?php echo esc_attr($max_attempts); ?>" min="1" class="small-text"> attempts</td></tr>
                 <tr><th><label for="ban_time">Ban Duration</label></th><td><input type="number" name="ban_time" id="ban_time" value="<?php echo esc_attr($ban_time); ?>" min="1" class="small-text"> minutes</td></tr>
                 <tr><th><label for="auto_ban_invalid">Auto Ban Invalid Usernames</label></th><td><input type="checkbox" name="auto_ban_invalid" id="auto_ban_invalid" value="1" <?php checked($auto_ban_invalid, 1); ?>></td></tr>
+                <tr><th><label for="excluded_ips">Excluded IPs/Subnets</label></th><td><textarea name="excluded_ips" id="excluded_ips" rows="5" class="regular-text"><?php echo esc_textarea($excluded_ips); ?></textarea><p class="description">Enter one IP or CIDR subnet (e.g., 192.168.1.0/24) per line to exclude from banning.</p></td></tr>
                 <tr><th><label for="logo_image">Upload Logo</label></th><td><input type="file" name="logo_image" id="logo_image"></td></tr>
             </table>
             <p class="submit"><input type="submit" name="teckglobal_bfp_save_settings" class="button button-primary" value="Save Settings"></p>

@@ -78,32 +78,37 @@ function teckglobal_bfp_login_failed($username) {
     if ($attempts >= $max_attempts) {
         teckglobal_bfp_ban_ip($ip);
         teckglobal_bfp_debug("IP $ip exceeded $max_attempts attempts. Banned.");
+    } else {
+        teckglobal_bfp_debug("Login failed for IP $ip, attempts: $attempts/$max_attempts");
     }
 }
 add_action('wp_login_failed', 'teckglobal_bfp_login_failed');
 
-// Check for invalid username attempts (only ban invalid usernames)
+// Check for invalid username attempts (only log/ban invalid usernames)
 function teckglobal_bfp_check_invalid_username($username, $password) {
     $ip = teckglobal_bfp_get_client_ip();
     $auto_ban_invalid = get_option('teckglobal_bfp_auto_ban_invalid', 0);
 
-    // Only log and ban if username is invalid and setting is enabled
     if ($auto_ban_invalid && !username_exists($username) && !email_exists($username)) {
         teckglobal_bfp_log_attempt($ip);
         teckglobal_bfp_ban_ip($ip);
         teckglobal_bfp_debug("IP $ip attempted invalid username '$username'. Auto-banned.");
+    } else {
+        teckglobal_bfp_debug("IP $ip attempted login with username '$username' - no action taken.");
     }
 }
 add_action('wp_authenticate', 'teckglobal_bfp_check_invalid_username', 10, 2);
 
-// Block banned IPs (skip during login process)
+// Block banned IPs (skip during login unless explicitly banned)
 function teckglobal_bfp_block_banned_ips() {
-    // Skip if on wp-login.php to avoid interfering with login
-    if (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') !== false) {
-        return;
-    }
     $ip = teckglobal_bfp_get_client_ip();
     if (teckglobal_bfp_is_ip_banned($ip)) {
+        // Skip blocking on login page unless login has failed or invalid username detected
+        if (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') !== false && !did_action('wp_login_failed') && !isset($_POST['log'])) {
+            teckglobal_bfp_debug("IP $ip is banned but allowing login attempt to process.");
+            return;
+        }
+        teckglobal_bfp_debug("Blocking banned IP $ip.");
         wp_die(
             'Your IP has been banned due to suspicious activity. Please contact the site administrator.',
             'Access Denied',
@@ -111,7 +116,7 @@ function teckglobal_bfp_block_banned_ips() {
         );
     }
 }
-add_action('init', 'teckglobal_bfp_block_banned_ips');
+add_action('init', 'teckglobal_bfp_block_banned_ips', 1);
 
 // Register admin menu
 function teckglobal_bfp_admin_menu() {
@@ -194,10 +199,11 @@ function teckglobal_bfp_activate() {
     dbDelta($sql);
 
     // Set default options
-    add_option('teckglobal_bfp_geo_path', '/usr/share/GeoIP/GeoLite2-City.mmdb');
+    add_option('teckglobal_bfp_geo_path', '/var/www/html/teck-global.com/wp-content/plugins/teckglobal-brute-force-protect/vendor/maxmind-db/GeoLite2-City.mmdb');
     add_option('teckglobal_bfp_max_attempts', 5);
     add_option('teckglobal_bfp_ban_time', 60);
     add_option('teckglobal_bfp_auto_ban_invalid', 0);
+    add_option('teckglobal_bfp_excluded_ips', '');
 }
 register_activation_hook(__FILE__, 'teckglobal_bfp_activate');
 
