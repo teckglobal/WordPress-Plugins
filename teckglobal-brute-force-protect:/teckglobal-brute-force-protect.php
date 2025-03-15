@@ -82,8 +82,8 @@ function teckglobal_bfp_login_failed($username) {
 }
 add_action('wp_login_failed', 'teckglobal_bfp_login_failed');
 
-// Check for invalid username attempts
-function teckglobal_bfp_check_invalid_username($user, $username, $password) {
+// Check for invalid username attempts (Fixed to 2 arguments)
+function teckglobal_bfp_check_invalid_username($username, $password) {
     if (get_option('teckglobal_bfp_auto_ban_invalid', 0) && !username_exists($username)) {
         $ip = teckglobal_bfp_get_client_ip();
         teckglobal_bfp_log_attempt($ip);
@@ -91,7 +91,7 @@ function teckglobal_bfp_check_invalid_username($user, $username, $password) {
         teckglobal_bfp_debug("IP $ip attempted invalid username '$username'. Auto-banned.");
     }
 }
-add_action('wp_authenticate', 'teckglobal_bfp_check_invalid_username', 10, 3);
+add_action('wp_authenticate', 'teckglobal_bfp_check_invalid_username', 10, 2);
 
 // Block banned IPs
 function teckglobal_bfp_block_banned_ips() {
@@ -152,11 +152,13 @@ function teckglobal_bfp_admin_menu() {
 }
 add_action('admin_menu', 'teckglobal_bfp_admin_menu');
 
-// Enqueue admin assets (Leaflet for map)
+// Enqueue admin assets
 function teckglobal_bfp_enqueue_admin_assets($hook) {
     if (strpos($hook, 'teckglobal-bfp') !== false) {
+        wp_enqueue_style('teckglobal-bfp-style', TECKGLOBAL_BFP_URL . 'assets/css/style.css', [], '1.0.0');
         wp_enqueue_style('leaflet-css', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', [], '1.9.4');
         wp_enqueue_script('leaflet-js', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', [], '1.9.4', true);
+        wp_enqueue_script('teckglobal-bfp-script', TECKGLOBAL_BFP_URL . 'assets/js/script.js', ['leaflet-js'], '1.0.0', true);
     }
 }
 add_action('admin_enqueue_scripts', 'teckglobal_bfp_enqueue_admin_assets');
@@ -185,7 +187,7 @@ function teckglobal_bfp_activate() {
     dbDelta($sql);
 
     // Set default options
-    add_option('teckglobal_bfp_geo_path', '/usr/share/GeoIP/GeoLite2-City.mmdb');
+    add_option('teckglobal_bfp_geo_path', '/var/www/html/teck-global.com/wp-content/plugins/teckglobal-brute-force-protect/vendor/maxmind-db/GeoLite2-City.mmdb');
     add_option('teckglobal_bfp_max_attempts', 5);
     add_option('teckglobal_bfp_ban_time', 60);
     add_option('teckglobal_bfp_auto_ban_invalid', 0);
