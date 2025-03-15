@@ -8,7 +8,7 @@ require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 require_once TECKGLOBAL_BFP_PATH . 'vendor/autoload.php';
 use GeoIp2\Database\Reader;
 
-// Check if an IP is excluded (exact match or CIDR)
+// Check if an IP is excluded
 function teckglobal_bfp_is_ip_excluded(string $ip): bool {
     $excluded = get_option('teckglobal_bfp_excluded_ips', '');
     if (empty($excluded)) return false;
@@ -16,7 +16,6 @@ function teckglobal_bfp_is_ip_excluded(string $ip): bool {
     $excluded_list = array_filter(array_map('trim', explode("\n", $excluded)));
     foreach ($excluded_list as $entry) {
         if (strpos($entry, '/') !== false) {
-            // CIDR notation (e.g., 192.168.1.0/24)
             list($subnet, $mask) = explode('/', $entry);
             $ip_long = ip2long($ip);
             $subnet_long = ip2long($subnet);
@@ -25,7 +24,6 @@ function teckglobal_bfp_is_ip_excluded(string $ip): bool {
                 return true;
             }
         } elseif ($entry === $ip) {
-            // Exact IP match
             teckglobal_bfp_debug("IP $ip matches excluded IP $entry.");
             return true;
         }
@@ -41,7 +39,7 @@ function teckglobal_bfp_log_attempt(string $ip): void {
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'teckglobal_bfp_logs';
-    $geo_path = get_option('teckglobal_bfp_geo_path', '/var/www/html/teck-global.com/wp-content/plugins/teckglobal-brute-force-protect/vendor/maxmind-db/GeoLite2-City.mmdb');
+    $geo_path = get_option('teckglobal_bfp_geo_path', '/usr/share/GeoIP/GeoLite2-City.mmdb');
     $existing = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE ip = %s", $ip));
     if ($existing) {
         $result = $wpdb->update($table_name, ['attempts' => $existing->attempts + 1, 'timestamp' => current_time('mysql')], ['ip' => $ip]);
@@ -151,7 +149,7 @@ function teckglobal_bfp_settings_page(): void {
         echo '<div class="updated"><p>Settings saved successfully.</p></div>';
     }
     $total_attempts = teckglobal_bfp_get_total_attempts();
-    $geo_path = get_option('teckglobal_bfp_geo_path', '/var/www/html/teck-global.com/wp-content/plugins/teckglobal-brute-force-protect/vendor/maxmind-db/GeoLite2-City.mmdb');
+    $geo_path = get_option('teckglobal_bfp_geo_path', '/usr/share/GeoIP/GeoLite2-City.mmdb');
     $max_attempts = get_option('teckglobal_bfp_max_attempts', 5);
     $ban_time = get_option('teckglobal_bfp_ban_time', 60);
     $auto_ban_invalid = get_option('teckglobal_bfp_auto_ban_invalid', 0);
@@ -300,9 +298,9 @@ function teckglobal_bfp_geo_map_page(): void {
     global $wpdb;
     $table_name = $wpdb->prefix . 'teckglobal_bfp_logs';
     $ips = $wpdb->get_results(
-        "SELECT ip, country, latitude, longitude, COUNT(*) as count
-         FROM $table_name
-         WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND banned = 1
+        "SELECT ip, country, latitude, longitude, COUNT(*) as count 
+         FROM $table_name 
+         WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND banned = 1 
          GROUP BY ip, country, latitude, longitude",
         ARRAY_A
     );

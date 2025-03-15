@@ -1,4 +1,4 @@
-<?php
+<<?php
 /*
  * Plugin Name: TeckGlobal Brute Force Protect
  * Author: TeckGlobal LLC
@@ -70,6 +70,7 @@ function teckglobal_bfp_get_client_ip(): string {
 // Hook into failed login attempts
 function teckglobal_bfp_login_failed($username) {
     $ip = teckglobal_bfp_get_client_ip();
+    teckglobal_bfp_debug("Login failed for username '$username' from IP $ip");
     teckglobal_bfp_log_attempt($ip);
 
     $max_attempts = (int) get_option('teckglobal_bfp_max_attempts', 5);
@@ -79,36 +80,46 @@ function teckglobal_bfp_login_failed($username) {
         teckglobal_bfp_ban_ip($ip);
         teckglobal_bfp_debug("IP $ip exceeded $max_attempts attempts. Banned.");
     } else {
-        teckglobal_bfp_debug("Login failed for IP $ip, attempts: $attempts/$max_attempts");
+        teckglobal_bfp_debug("IP $ip failed login, attempts: $attempts/$max_attempts");
     }
 }
 add_action('wp_login_failed', 'teckglobal_bfp_login_failed');
 
-// Check for invalid username attempts (only log/ban invalid usernames)
+// Hook into successful logins to reset attempts
+function teckglobal_bfp_login_success($username) {
+    $ip = teckglobal_bfp_get_client_ip();
+    teckglobal_bfp_debug("Successful login for username '$username' from IP $ip");
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'teckglobal_bfp_logs';
+    $wpdb->update($table_name, ['attempts' => 0, 'banned' => 0, 'ban_expiry' => null], ['ip' => $ip]);
+    teckglobal_bfp_debug("Reset attempts and ban status for IP $ip on successful login");
+}
+add_action('wp_login', 'teckglobal_bfp_login_success');
+
+// Check for invalid username attempts
 function teckglobal_bfp_check_invalid_username($username, $password) {
     $ip = teckglobal_bfp_get_client_ip();
     $auto_ban_invalid = get_option('teckglobal_bfp_auto_ban_invalid', 0);
 
     if ($auto_ban_invalid && !username_exists($username) && !email_exists($username)) {
+        teckglobal_bfp_debug("Invalid username '$username' detected from IP $ip");
         teckglobal_bfp_log_attempt($ip);
         teckglobal_bfp_ban_ip($ip);
-        teckglobal_bfp_debug("IP $ip attempted invalid username '$username'. Auto-banned.");
-    } else {
-        teckglobal_bfp_debug("IP $ip attempted login with username '$username' - no action taken.");
+        teckglobal_bfp_debug("IP $ip auto-banned for invalid username");
     }
 }
 add_action('wp_authenticate', 'teckglobal_bfp_check_invalid_username', 10, 2);
 
-// Block banned IPs (skip during login unless explicitly banned)
+// Block banned IPs
 function teckglobal_bfp_block_banned_ips() {
     $ip = teckglobal_bfp_get_client_ip();
     if (teckglobal_bfp_is_ip_banned($ip)) {
-        // Skip blocking on login page unless login has failed or invalid username detected
-        if (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') !== false && !did_action('wp_login_failed') && !isset($_POST['log'])) {
-            teckglobal_bfp_debug("IP $ip is banned but allowing login attempt to process.");
+        // Skip blocking on login page until after authentication
+        if (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') !== false && !did_action('wp_login_failed') && !did_action('wp_login')) {
+            teckglobal_bfp_debug("IP $ip is banned but allowing login attempt to process");
             return;
         }
-        teckglobal_bfp_debug("Blocking banned IP $ip.");
+        teckglobal_bfp_debug("Blocking banned IP $ip");
         wp_die(
             'Your IP has been banned due to suspicious activity. Please contact the site administrator.',
             'Access Denied',
@@ -185,7 +196,7 @@ function teckglobal_bfp_activate() {
         id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         ip VARCHAR(45) NOT NULL,
         timestamp DATETIME NOT NULL,
-        attempts INT NOT NULL DEFAULT 1,
+        attempts INT NOT NULL DEFAULT 0,
         banned TINYINT(1) NOT NULL DEFAULT 0,
         ban_expiry DATETIME DEFAULT NULL,
         country VARCHAR(100) DEFAULT 'Unknown',
@@ -199,7 +210,7 @@ function teckglobal_bfp_activate() {
     dbDelta($sql);
 
     // Set default options
-    add_option('teckglobal_bfp_geo_path', '/var/www/html/teck-global.com/wp-content/plugins/teckglobal-brute-force-protect/vendor/maxmind-db/GeoLite2-City.mmdb');
+    add_option('teckglobal_bfp_geo_path', '/usr/share/GeoIP/GeoLite2-City.mmdb');
     add_option('teckglobal_bfp_max_attempts', 5);
     add_option('teckglobal_bfp_ban_time', 60);
     add_option('teckglobal_bfp_auto_ban_invalid', 0);
