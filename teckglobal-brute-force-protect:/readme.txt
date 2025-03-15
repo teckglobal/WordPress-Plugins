@@ -2,6 +2,7 @@
 Contributors: TeckGlobal LLC
 Author URI: https://teck-global.com
 Plugin URI: https://teck-global.com/wordpress-plugins
+Donate link: https://teck-global.com/buy-me-a-coffee/
 Requires at least: 5.0
 Tested up to: 6.7
 Stable tag: 1.0.4
