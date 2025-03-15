@@ -1,18 +1,19 @@
 <?php
 /**
- * Plugin Name: Total Login
+ * Plugin Name: TeckGlobal Total Login
+ * Author: TeckGlobal LLC
+ * Author URI: https://teck-global.com/
  * Plugin URI: https://teck-global.com/wordpress-plugins
- * Description: Customizes the WordPress login page with TeckGlobal branding and provides admin options for customization.
+ * Description: Customizes the WordPress login page with TeckGlobal branding and provides admin options for customization. If you enjoy this free product please donate at https://teck-global.com/buy-me-a-coffee/
  * Version: 1.0.0
- * Author: Teck Global
- * Author URI: https://teck-global.com
  * License: GPL2
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: teck-global-login
+ * Text Domain: teckglobal-total-login
  * Requires at least: 5.0
- * Tested up to: 6.4
- * Requires PHP: 7.4
- * Tags: login, customization, branding
+ * Tested up to: 6.7
+ * Requires PHP: 7.4 or later
+ * WordPress Available: yes
+ * Requires License: no
  */
 
 // Exit if accessed directly
@@ -36,7 +37,7 @@ add_action('login_head', 'teck_global_custom_login_styles');
 
 // Admin menu for customization options
 function teck_global_admin_menu() {
-    add_menu_page('Teck Global Login Settings', 'Login Customizer', 'manage_options', 'teck-global-login', 'teck_global_settings_page', 'dashicons-admin-customizer', 110);
+    add_menu_page('TeckGlobal Login Settings', 'Login Customizer', 'manage_options', 'teck-global-login', 'teck_global_settings_page', 'dashicons-admin-customizer', 110);
 }
 add_action('admin_menu', 'teck_global_admin_menu');
 
@@ -44,7 +45,7 @@ add_action('admin_menu', 'teck_global_admin_menu');
 function teck_global_settings_page() {
     ?>
     <div class="wrap">
-        <h1>Teck Global Login Customizer</h1>
+        <h1>TeckGlobal Total Login</h1>
         <form method="post" action="options.php">
             <?php
             settings_fields('teck_global_settings_group');
