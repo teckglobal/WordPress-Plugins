@@ -32,7 +32,7 @@ function teckglobal_bfp_log_attempt(string $ip): void {
         $country = 'Unknown';
         $latitude = null;
         $longitude = null;
-        
+
         if (!filter_var($ip, FILTER_VALIDATE_IP)) {
             teckglobal_bfp_debug("Invalid IP address provided: $ip");
         } elseif (file_exists($geo_path)) {
@@ -289,13 +289,6 @@ class TeckGlobal_BFP_IP_Table extends WP_List_Table {
             'per_page'    => $per_page,
             'total_pages' => ceil($total_items / $per_page),
         ]);
-
-        if (isset($_GET['action']) && $_GET['action'] === 'unban' && isset($_GET['ip']) && check_admin_referer('teckglobal_bfp_unban_ip_' . $_GET['ip'])) {
-            $ip = sanitize_text_field($_GET['ip']);
-            teckglobal_bfp_unban_ip($ip);
-            wp_redirect(admin_url('admin.php?page=teckglobal-bfp-ip-logs&unbanned=1'));
-            exit;
-        }
     }
 
     public function get_sortable_columns(): array {
@@ -333,6 +326,19 @@ class TeckGlobal_BFP_IP_Table extends WP_List_Table {
     }
 }
 
+// Handle unban action early via admin_init
+function teckglobal_bfp_handle_unban_ip() {
+    if (isset($_GET['page']) && $_GET['page'] === 'teckglobal-bfp-ip-logs' &&
+        isset($_GET['action']) && $_GET['action'] === 'unban' &&
+        isset($_GET['ip']) && check_admin_referer('teckglobal_bfp_unban_ip_' . $_GET['ip'])) {
+        $ip = sanitize_text_field($_GET['ip']);
+        teckglobal_bfp_unban_ip($ip);
+        wp_redirect(admin_url('admin.php?page=teckglobal-bfp-ip-logs&unbanned=1'));
+        exit;
+    }
+}
+add_action('admin_init', 'teckglobal_bfp_handle_unban_ip');
+
 function teckglobal_bfp_ip_logs_page(): void {
     $table = new TeckGlobal_BFP_IP_Table();
     $table->prepare_items();
@@ -356,11 +362,11 @@ function teckglobal_bfp_ip_logs_page(): void {
 function teckglobal_bfp_geo_map_page(): void {
     global $wpdb;
     $table_name = $wpdb->prefix . 'teckglobal_bfp_logs';
-    
+
     $ips = $wpdb->get_results(
-        "SELECT ip, country, latitude, longitude, COUNT(*) as count 
-         FROM $table_name 
-         WHERE latitude IS NOT NULL AND longitude IS NOT NULL 
+        "SELECT ip, country, latitude, longitude, COUNT(*) as count
+         FROM $table_name
+         WHERE latitude IS NOT NULL AND longitude IS NOT NULL
          GROUP BY ip, country, latitude, longitude",
         ARRAY_A
     );

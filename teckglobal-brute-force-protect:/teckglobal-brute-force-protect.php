@@ -1,13 +1,19 @@
 <?php
 /*
  * Plugin Name: TeckGlobal Brute Force Protect
- * Plugin URI: https://teck-global.com/wordpress-plugins
- * Description: A WordPress plugin by TeckGlobal LLC to prevent brute force login attacks with IP management and geolocation features.
- * Version: 1.0.4
  * Author: TeckGlobal LLC
- * Author URI: https://teck-global.com
+ * Author URI: https://teck-global.com/
+ * Plugin URI: https://teck-global.com/wordpress-plugins/
+ * Description: A WordPress plugin by TeckGlobal LLC to prevent brute force login attacks with IP management and geolocation features. If you enjoy this free product please donate at https://teck-global.com/buy-me-a-coffee/
+ * Version: 1.0.0
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
+ * Text Domain: teckglobal-brute-force-protect
+ * Requires at least: 5.0
+ * Tested up to: 6.7
+ * Requires PHP: 7.4 or later
+ * WordPress Available: yes
+ * Requires License: no
 */
 
 // Prevent direct access
