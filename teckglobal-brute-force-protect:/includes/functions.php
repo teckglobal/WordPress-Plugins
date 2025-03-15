@@ -63,12 +63,17 @@ function teckglobal_bfp_ban_ip(string $ip): void {
     $table_name = $wpdb->prefix . 'teckglobal_bfp_logs';
     $ban_time = (int) get_option('teckglobal_bfp_ban_time', 60);
     $expiry = date('Y-m-d H:i:s', strtotime("+$ban_time minutes"));
-    if (!$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE ip = %s", $ip))) {
-        teckglobal_bfp_log_attempt($ip);
+
+    // Ensure the IP is logged, even if it’s new
+    $existing = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE ip = %s", $ip));
+    if (!$existing) {
+        teckglobal_bfp_log_attempt($ip); // Log with attempts = 1
+        $wpdb->update($table_name, ['banned' => 1, 'ban_expiry' => $expiry], ['ip' => $ip]);
+    } else {
+        $result = $wpdb->update($table_name, ['banned' => 1, 'ban_expiry' => $expiry], ['ip' => $ip]);
+        if ($result === false) teckglobal_bfp_debug("Failed to ban IP $ip: " . $wpdb->last_error);
+        else teckglobal_bfp_debug("IP $ip banned until $expiry.");
     }
-    $result = $wpdb->update($table_name, ['banned' => 1, 'ban_expiry' => $expiry], ['ip' => $ip]);
-    if ($result === false) teckglobal_bfp_debug("Failed to ban IP $ip: " . $wpdb->last_error);
-    else teckglobal_bfp_debug("IP $ip banned until $expiry.");
 }
 
 function teckglobal_bfp_unban_ip(string $ip): void {
@@ -142,13 +147,21 @@ function teckglobal_bfp_settings_page(): void {
 function teckglobal_bfp_manage_ips_page(): void {
     if (isset($_POST['ban_ip']) && check_admin_referer('teckglobal_bfp_ban_ip')) {
         $ip = sanitize_text_field($_POST['ip']);
-        teckglobal_bfp_ban_ip($ip);
-        echo '<div class="updated"><p>IP banned successfully.</p></div>';
+        if (filter_var($ip, FILTER_VALIDATE_IP)) {
+            teckglobal_bfp_ban_ip($ip);
+            echo '<div class="updated"><p>IP ' . esc_html($ip) . ' banned successfully.</p></div>';
+        } else {
+            echo '<div class="error"><p>Invalid IP address provided.</p></div>';
+        }
     }
     if (isset($_POST['unban_ip']) && check_admin_referer('teckglobal_bfp_unban_ip')) {
         $ip = sanitize_text_field($_POST['ip']);
-        teckglobal_bfp_unban_ip($ip);
-        echo '<div class="updated"><p>IP unbanned successfully.</p></div>';
+        if (filter_var($ip, FILTER_VALIDATE_IP)) {
+            teckglobal_bfp_unban_ip($ip);
+            echo '<div class="updated"><p>IP ' . esc_html($ip) . ' unbanned successfully.</p></div>';
+        } else {
+            echo '<div class="error"><p>Invalid IP address provided.</p></div>';
+        }
     }
     ?>
     <div class="wrap">
@@ -246,9 +259,9 @@ function teckglobal_bfp_geo_map_page(): void {
     global $wpdb;
     $table_name = $wpdb->prefix . 'teckglobal_bfp_logs';
     $ips = $wpdb->get_results(
-        "SELECT ip, country, latitude, longitude, COUNT(*) as count 
-         FROM $table_name 
-         WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND banned = 1 
+        "SELECT ip, country, latitude, longitude, COUNT(*) as count
+         FROM $table_name
+         WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND banned = 1
          GROUP BY ip, country, latitude, longitude",
         ARRAY_A
     );
