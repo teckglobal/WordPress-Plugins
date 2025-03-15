@@ -1,15 +1,20 @@
 <?php
 
 /**
- * Plugin Name: Image Convert WebP
+ * Plugin Name: TeckGlobal Image Convert WebP
+ * Author: TeckGlobal LLC
+ * Author URI: https://teck-global.com/
  * Plugin URI: https://teck-global.com/wordpress-plugins/
- * Description: WordPress image resize - convert jpg/jpeg/png to WebP.
- * Author: TeckGlobal
- * Version: 1.3
- * Author URI: http://teck-global.com
- * Convert uploaded images to WebP without breaking WordPress image sizes.
- * This plugin will convert all new images from .jpg/jpeg to WebP
- * 
+ * Description: WordPress image resize plugin to convert all uploaded images to WebP at 80 percent quality without breaking WordPress image sizes. If you enjoy this free product please donate at https://teck-global.com/buy-me-a-coffee/
+ * Version: 1.0.0
+ * License: GPL2
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: teckglobal-image-convert-webp
+ * Requires at least: 5.0
+ * Tested up to: 6.7
+ * Requires PHP: 7.4 or later
+ * WordPress Available: yes
+ * Requires License: no
  */
 
 if (!defined('ABSPATH')) {
